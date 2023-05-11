@@ -118,3 +118,41 @@ def forecast_trade():
     # Generate forecast for the next 5 years
     future_years = np.arange(2022, 2027)
     forecast_future = exponential(future_years, *param)
+# Plot the data, forecast, and confidence interval
+    plt.figure()
+    plt.plot(df_trade["Year"], df_trade["Merchandise trade (% of GDP)"],
+             label="Historical Data")
+    plt.plot(year, forecast, label="Forecast")
+    plt.plot(future_years, forecast_future, label="Next 5 Years Forecast")
+    plt.fill_between(year, upper, lower, color='purple', alpha=0.2,
+                     label="95% Confidence Interval")
+    plt.xlabel("Year")
+    plt.ylabel("Merchandise trade (% of GDP)")
+    plt.title("Exponential forecast for United States")
+    plt.legend()
+    plt.show()
+
+
+df_2021 = merchandise_data()
+
+# perform k-means clustering to obtain cluster centers
+kmeans = cluster.KMeans(n_clusters=6)
+kmeans.fit(df_2021[["Merchandise imports", "Merchandise exports"]])
+centers = kmeans.cluster_centers_
+
+# plot all clusters and centers in one plot
+plt.figure(figsize=(6, 5))
+cm = plt.cm.get_cmap('tab10')
+for i, label in enumerate(np.unique(df_2021["labels"])):
+    plt.scatter(df_2021[df_2021["labels"] == label]["Merchandise imports"], \
+                df_2021[df_2021["labels"] == label]["Merchandise exports"], \
+                    10, label="Cluster {}".format(label), cmap=cm, alpha=0.7)
+plt.scatter(centers[:,0], centers[:,1], 50, "k", marker="D", \
+            label="Cluster centers")
+plt.xlabel("Merchandise imports")
+plt.ylabel("Merchandise exports")
+plt.title("Kmeans Clustering")
+plt.legend()
+plt.show()
+
+forecast_trade()
