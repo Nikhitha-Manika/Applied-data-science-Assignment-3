@@ -48,3 +48,29 @@ def merchandise_data():
     scaler = StandardScaler()
     df_cluster = scaler.fit_transform(df_2021[["Merchandise imports", \
                                                "Merchandise exports"]])
+    # Determine the optimal number of clusters using the elbow method
+    distortions = []
+    max_clusters = 10  # Maximum number of clusters to consider
+    for num_clusters in range(2, max_clusters + 1):
+        kmeans = cluster.KMeans(n_clusters=num_clusters)
+        kmeans.fit(df_cluster)
+        distortions.append(kmeans.inertia_)
+
+    # Plot the elbow curve
+    plt.figure()
+    plt.plot(range(2, max_clusters + 1), distortions, marker='o')
+    plt.xlabel('Number of Clusters')
+    plt.ylabel('Distortion')
+    plt.title('Elbow Curve')
+    plt.show()
+    
+    # Find the optimal number of clusters
+    optimal_clusters = distortions.index(min(distortions)) + 2
+    print("Optimal Number of Clusters:", optimal_clusters)
+    
+    # perform k-means clustering and add cluster labels to DataFrame
+    kmeans = cluster.KMeans(n_clusters=2)
+    kmeans.fit(df_cluster)
+    df_2021["labels"] = kmeans.labels_
+
+    return df_2021
