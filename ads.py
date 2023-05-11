@@ -74,3 +74,47 @@ def merchandise_data():
     df_2021["labels"] = kmeans.labels_
 
     return df_2021
+def forecast_trade():
+    """
+    Reads merchandise data, fits an exponential function to the data,
+    and plots the forecast with confidence range.
+    """
+
+    # Read data from CSV file
+    trade = pd.read_csv("Merchandise trade (% of GDP).csv", skiprows=4)
+    trade = trade.set_index('Country Name', drop=True)
+    trade = trade.loc[:, '1960':'2021']
+    trade = trade.transpose()
+    trade = trade.loc[:, 'United States']
+    df = trade.dropna(axis=0)
+
+    # Create DataFrame with year and population columns
+    df_trade = pd.DataFrame()
+    df_trade['Year'] = pd.DataFrame(df.index)
+    df_trade['Merchandise trade (% of GDP)'] = pd.DataFrame(df.values)
+
+    # Fit exponential function to data
+    def exponential(t, n0, r):
+        """Calculates the exponential function with initial value n0 and
+        growth rate r"""
+        f = n0 * np.exp(r * (t - df_trade["Year"].min()))
+        return f
+
+    df_trade["Year"] = pd.to_numeric(df_trade["Year"])
+    param, covar = curve_fit(exponential, df_trade["Year"],
+                             df_trade["Merchandise trade (% of GDP)"],
+                             p0=(1.2e12, 0.03), maxfev=10000)
+
+    # Generate forecast using exponential function
+    year = np.arange(1960, 2031)
+    forecast = exponential(year, *param)
+
+    # Calculate confidence interval
+    stderr = np.sqrt(np.diag(covar))
+    conf_interval = 1.96 * stderr
+    upper = exponential(year, *(param + conf_interval))
+    lower = exponential(year, *(param - conf_interval))
+    
+    # Generate forecast for the next 5 years
+    future_years = np.arange(2022, 2027)
+    forecast_future = exponential(future_years, *param)
